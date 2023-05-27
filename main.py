@@ -110,31 +110,39 @@ def tables():
     student_team_join()
     student_sport_join()
 
+
+def unique_sports(csv_data):
+    sports = set()
+    for row in csv_data:
+        sports.add(row[6])
+    return list(sports)
+
+
 def readcsv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
-        next(reader)  # Skip the header row
-        for r in reader:
-            c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[3], r[4], r[2]))
+        csv_data = list(reader)
 
-            # Check if the YearLevel value is not empty
-            if r[5]:
-                c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[5]))
+    # Get unique sports from the CSV
+    sports = unique_sports(csv_data)
 
-            # Check if the Sport value is not empty
-            if r[6]:
-                c.execute("INSERT INTO Sports(Name) VALUES (?);", (r[6],))
-                sport_id = c.lastrowid
-            else:
-                sport_id = None
+    # Insert unique sports into the Sports table
+    for sport in sports:
+        c.execute("INSERT INTO Sports(Name) VALUES (?);", (sport,))
 
-            # Check if the Health Info value is not empty
-            if r[7]:
-                c.execute("INSERT INTO StudentSport(SportID, StudentID) VALUES (?,?);", (sport_id, c.lastrowid))
+    # Populate People, Students, and Staff tables
+    for r in csv_data:
+        c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[3], r[4], r[2]))
 
-            # Check if the Payment method value is not empty
-            if r[8]:
-                c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (c.lastrowid,))
+        if r[5]:
+            c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[5]))
+
+        if r[6]:
+            sport_id = sports.index(r[6]) + 1
+            c.execute("INSERT INTO StudentSport(SportID, StudentID) VALUES (?,?);", (sport_id, c.lastrowid))
+
+        if r[8]:
+            c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (c.lastrowid,))
 
     connect.commit()
 
