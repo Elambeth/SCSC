@@ -1,5 +1,4 @@
 import sqlite3
-import random
 import csv
 from art import text2art
 from tabulate import tabulate as tab
@@ -117,61 +116,75 @@ def unique_sports(csv_data):
         sports.add(row[6])
     return list(sports)
 
+def cleaning(form_list):
+    # Removing timestamps
+    for i in form_list:
+        del i[0]
+    # Pop the headings to a list
+    headings = []
+    headings.append(form_list.pop(0))
+    return headings, form_list
 
 def readcsv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
 
-    # Get unique sports from the CSV
-    sports = unique_sports(csv_data)
+    headings, data = cleaning(csv_data)
 
-    # Insert unique sports into the Sports table
-    for sport in sports:
-        c.execute("INSERT INTO Sports(Name) VALUES (?);", (sport,))
+    for r in data:
+        c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[2], r[3], r[1]))
 
-    # Populate People, Students, and Staff tables
-    for r in csv_data:
-        c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[3], r[4], r[2]))
+        # Check if the YearLevel value is not empty
+        if r[4]:
+            c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[4]))
 
+        # Check if the Sport value is not empty
         if r[5]:
-            c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[5]))
+            c.execute("INSERT INTO Sports(Name) VALUES (?);", (r[5],))
+            sport_id = c.lastrowid
+        else:
+            sport_id = None
 
+        # Check if the Health Info value is not empty
         if r[6]:
-            sport_id = sports.index(r[6]) + 1
             c.execute("INSERT INTO StudentSport(SportID, StudentID) VALUES (?,?);", (sport_id, c.lastrowid))
 
-        if r[8]:
+        # Check if the Payment method value is not empty
+        if r[7]:
             c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (c.lastrowid,))
 
     connect.commit()
 
 
-
 def read_coaches_staff_csv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
-        next(reader)  # Skip the header row
-        for r in reader:
-            # Check if the person is already in the People table
-            c.execute("SELECT ID FROM People WHERE Email = ?;", (r[0],))
-            person = c.fetchone()
+        csv_data = list(reader)
 
-            if person:
-                person_id = person[0]
-            else:
-                # Insert the person into the People table
-                c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[1], r[2], r[0]))
-                person_id = c.lastrowid
+    headings, data = cleaning(csv_data)
 
-            if r[3] == "Coach":
-                # Insert the coach into the Coaches table
-                c.execute("INSERT INTO Coaches(PeopleID) VALUES (?);", (person_id,))
-            elif r[3] == "Staff":
-                # Insert the staff member into the Staff table
-                c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (person_id,))
+    for r in data:
+        # Check if the person is already in the People table
+        c.execute("SELECT ID FROM People WHERE Email = ?;", (r[0],))
+        person = c.fetchone()
+
+        if person:
+            person_id = person[0]
+        else:
+            # Insert the person into the People table
+            c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[1], r[2], r[0]))
+            person_id = c.lastrowid
+
+        if r[2] == "Coach":
+            # Insert the coach into the Coaches table
+            c.execute("INSERT INTO Coaches(PeopleID) VALUES (?);", (person_id,))
+        elif r[2] == "Staff":
+            # Insert the staff member into the Staff table
+            c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (person_id,))
 
     connect.commit()
+
 
 
 def sort_players_into_teams():
@@ -288,7 +301,7 @@ def search_database():
 
 
 def main():
-    title = text2art("TEAMBUILDER","small")
+    title = text2art("TEAMBUILDER")
     print(title)
     tables()
     readcsv("csv3")
