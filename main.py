@@ -1,6 +1,7 @@
 import sqlite3
 import random
 import csv
+from art import text2art
 from tabulate import tabulate as tab
 
 
@@ -164,21 +165,6 @@ def read_coaches_staff_csv(name):
 
     connect.commit()
 
-    # Fetch and display the resulting data
-    c.execute("SELECT * FROM Coaches")
-    coach_rows = c.fetchall()
-    coach_column_names = [description[0] for description in c.description]
-
-    c.execute("SELECT * FROM Staff")
-    staff_rows = c.fetchall()
-    staff_column_names = [description[0] for description in c.description]
-
-    print("Coaches:")
-    print(tab(coach_rows, headers=coach_column_names, tablefmt='psql'))
-    print("\nStaff:")
-    print(tab(staff_rows, headers=staff_column_names, tablefmt='psql'))
-
-
 
 def sort_players_into_teams():
     teams = []
@@ -228,15 +214,97 @@ def sort_players_into_teams():
 
     print("Players sorted into teams successfully!")
 
+def search_database():
+    while True:
+        print("\nSearch Database:")
+        print("1. Retrieve all students")
+        print("2. Retrieve all coaches")
+        print("3. Retrieve all staff members")
+        print("4. Retrieve all teams")
+        print("5. Retrieve all players in a specific team")
+        print("6. Retrieve all sports")
+        print("7. Retrieve all students participating in a specific sport")
+        print("8. Retrieve the number of students in each team")
+        print("9. Back to main menu")
 
-# ... Existing code ...
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            c.execute("SELECT * FROM Students")
+            students = c.fetchall()
+            print(tab(students, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "2":
+            c.execute("SELECT * FROM Coaches")
+            coaches = c.fetchall()
+            print(tab(coaches, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "3":
+            c.execute("SELECT * FROM Staff")
+            staff_members = c.fetchall()
+            print(tab(staff_members, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "4":
+            c.execute("SELECT * FROM Teams")
+            teams = c.fetchall()
+            print(tab(teams, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "5":
+            team_id = int(input("Enter the team ID: "))
+            c.execute("SELECT Students.* FROM Students JOIN StudentTeam ON Students.ID = StudentTeam.StudentID WHERE StudentTeam.TeamID = ?", (team_id,))
+            team_players = c.fetchall()
+            print(tab(team_players, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "6":
+            c.execute("SELECT * FROM Sports")
+            sports = c.fetchall()
+            print(tab(sports, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "7":
+            sport_id = int(input("Enter the sport ID: "))
+            c.execute("SELECT Students.* FROM Students JOIN StudentSport ON Students.ID = StudentSport.StudentID WHERE StudentSport.SportID = ?", (sport_id,))
+            sport_participants = c.fetchall()
+            print(tab(sport_participants, headers=[description[0] for description in c.description], tablefmt='psql'))
+
+        elif choice == "8":
+            c.execute("SELECT TeamID, COUNT(*) FROM StudentTeam GROUP BY TeamID")
+            team_sizes = c.fetchall()
+            print(tab(team_sizes, headers=["TeamID", "Count"], tablefmt='psql'))
+
+        elif choice == "9":
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+
 
 def main():
+    title = text2art("TEAMBUILDER","small")
+    print(title)
     tables()
     readcsv("csv3")
     read_coaches_staff_csv("coaches_staff")
-    sort_players_into_teams()
+
+    while True:
+        print("\nMain Menu:")
+        print("1. Search Database")
+        print("2. Sort players into teams")
+        print("3. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            search_database()
+
+        elif choice == "2":
+            sort_players_into_teams()
+
+        elif choice == "3":
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
 
 
 main()
-4
