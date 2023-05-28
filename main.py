@@ -109,7 +109,6 @@ def tables():
     student_team_join()
     student_sport_join()
 
-
 def unique_sports(csv_data):
     sports = set()
     for row in csv_data:
@@ -156,7 +155,6 @@ def readcsv(name):
 
     connect.commit()
 
-
 def read_coaches_staff_csv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
@@ -184,8 +182,6 @@ def read_coaches_staff_csv(name):
             c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (person_id,))
 
     connect.commit()
-
-
 
 def sort_players_into_teams():
     teams = []
@@ -297,7 +293,6 @@ def search_database():
 
         else:
             print("Invalid choice. Please try again.")
-
 
 
 def main():
