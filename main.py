@@ -1,4 +1,5 @@
 import sqlite3
+import random
 import csv
 from art import text2art
 from tabulate import tabulate as tab
@@ -109,79 +110,60 @@ def tables():
     student_team_join()
     student_sport_join()
 
-def unique_sports(csv_data):
-    sports = set()
-    for row in csv_data:
-        sports.add(row[6])
-    return list(sports)
-
-def cleaning(form_list):
-    # Removing timestamps
-    for i in form_list:
-        del i[0]
-    # Pop the headings to a list
-    headings = []
-    headings.append(form_list.pop(0))
-    return headings, form_list
-
 def readcsv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
-        csv_data = list(reader)
+        next(reader)  # Skip the header row
+        for r in reader:
+            c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[3], r[4], r[2]))
 
-    headings, data = cleaning(csv_data)
+            # Check if the YearLevel value is not empty
+            if r[5]:
+                c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[5]))
 
-    for r in data:
-        c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[2], r[3], r[1]))
+            # Check if the Sport value is not empty
+            if r[6]:
+                c.execute("INSERT INTO Sports(Name) VALUES (?);", (r[6],))
+                sport_id = c.lastrowid
+            else:
+                sport_id = None
 
-        # Check if the YearLevel value is not empty
-        if r[4]:
-            c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (c.lastrowid, r[4]))
+            # Check if the Health Info value is not empty
+            if r[7]:
+                c.execute("INSERT INTO StudentSport(SportID, StudentID) VALUES (?,?);", (sport_id, c.lastrowid))
 
-        # Check if the Sport value is not empty
-        if r[5]:
-            c.execute("INSERT INTO Sports(Name) VALUES (?);", (r[5],))
-            sport_id = c.lastrowid
-        else:
-            sport_id = None
-
-        # Check if the Health Info value is not empty
-        if r[6]:
-            c.execute("INSERT INTO StudentSport(SportID, StudentID) VALUES (?,?);", (sport_id, c.lastrowid))
-
-        # Check if the Payment method value is not empty
-        if r[7]:
-            c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (c.lastrowid,))
+            # Check if the Payment method value is not empty
+            if r[8]:
+                c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (c.lastrowid,))
 
     connect.commit()
+
 
 def read_coaches_staff_csv(name):
     with open((name + ".csv"), 'r') as f:
         reader = csv.reader(f)
-        csv_data = list(reader)
+        next(reader)  # Skip the header row
+        for r in reader:
+            # Check if the person is already in the People table
+            c.execute("SELECT ID FROM People WHERE Email = ?;", (r[0],))
+            person = c.fetchone()
 
-    headings, data = cleaning(csv_data)
+            if person:
+                person_id = person[0]
+            else:
+                # Insert the person into the People table
+                c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[1], r[2], r[0]))
+                person_id = c.lastrowid
 
-    for r in data:
-        # Check if the person is already in the People table
-        c.execute("SELECT ID FROM People WHERE Email = ?;", (r[0],))
-        person = c.fetchone()
-
-        if person:
-            person_id = person[0]
-        else:
-            # Insert the person into the People table
-            c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (r[1], r[2], r[0]))
-            person_id = c.lastrowid
-
-        if r[2] == "Coach":
-            # Insert the coach into the Coaches table
-            c.execute("INSERT INTO Coaches(PeopleID) VALUES (?);", (person_id,))
-        elif r[2] == "Staff":
-            # Insert the staff member into the Staff table
-            c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (person_id,))
+            if r[3] == "Coach":
+                # Insert the coach into the Coaches table
+                c.execute("INSERT INTO Coaches(PeopleID) VALUES (?);", (person_id,))
+            elif r[3] == "Staff":
+                # Insert the staff member into the Staff table
+                c.execute("INSERT INTO Staff(PeopleID) VALUES (?);", (person_id,))
 
     connect.commit()
+
 
 def sort_players_into_teams():
     teams = []
@@ -230,6 +212,7 @@ def sort_players_into_teams():
     connect.commit()
 
     print("Players sorted into teams successfully!")
+
 
 def search_database():
     while True:
@@ -295,8 +278,37 @@ def search_database():
             print("Invalid choice. Please try again.")
 
 
+def add_student():
+    firstname = input("Enter the student's firstname: ")
+    lastname = input("Enter the student's lastname: ")
+    email = input("Enter the student's email: ")
+    yearlevel = input("Enter the student's year level: ")
+
+    c.execute("INSERT INTO People(Firstname, LastName, Email) VALUES (?,?,?);", (firstname, lastname, email))
+    people_id = c.lastrowid
+
+    c.execute("INSERT INTO Students(PeopleID, YearLevel) VALUES (?,?);", (people_id, yearlevel))
+
+    connect.commit()
+
+    print("Student added successfully!")
+
+
+def remove_student():
+    student_id = int(input("Enter the ID of the student to remove: "))
+    confirm = input("Are you sure you want to remove the student? (y/n): ")
+
+    if confirm.lower() == "y":
+        c.execute("DELETE FROM Students WHERE ID = ?;", (student_id,))
+        c.execute("DELETE FROM People WHERE ID = ?;", (student_id,))
+        connect.commit()
+        print("Student removed successfully!")
+    else:
+        print("Removal canceled.")
+
+
 def main():
-    title = text2art("TEAMBUILDER")
+    title = text2art("TEAMBUILDER","small")
     print(title)
     tables()
     readcsv("csv3")
@@ -306,7 +318,8 @@ def main():
         print("\nMain Menu:")
         print("1. Search Database")
         print("2. Sort players into teams")
-        print("3. Exit")
+        print("3. Student Actions")
+        print("4. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -317,6 +330,20 @@ def main():
             sort_players_into_teams()
 
         elif choice == "3":
+            print("\nStudent Actions:")
+            print("1. Add a student to the database")
+            print("2. Remove a student from the database")
+
+            student_choice = input("Enter your choice: ")
+
+            if student_choice == "1":
+                add_student()
+            elif student_choice == "2":
+                remove_student()
+            else:
+                print("Invalid choice. Please try again.")
+
+        elif choice == "4":
             break
 
         else:
