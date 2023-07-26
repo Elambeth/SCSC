@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assign Sports</title>
+</head>
+<body>
+    <form method="POST">
+        {% for sport in unique_sports %}
+            <label for="{{ sport }}">{{ sport }}</label>
+            <select id="{{ sport }}" name="{{ sport }}">
+                {% for standard_sport in sports_list %}
+                    <option value="{{ standard_sport }}">{{ standard_sport }}</option>
+                {% endfor %}
+            </select><br>
+        {% endfor %}
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

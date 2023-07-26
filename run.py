@@ -1,5 +1,5 @@
 
-from flask import Flask,render_template
+from flask import Flask,render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import csv
 
@@ -21,7 +21,8 @@ class People(db.Model):
 class Sports(db.Model):
     __tablename__ = 'sports'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    csv_name = db.Column(db.String, nullable=False)
+    standard_name = db.Column(db.String, nullable=False)
 
 class Students(db.Model):
     __tablename__ = 'students'
@@ -66,7 +67,93 @@ class StudentTeam(db.Model):
 
 
 
-
+sports_list = [
+    "Adventure Racing",
+    "Aerobics",
+    "AFL",
+    "Archery",
+    "Athletics",
+    "Badminton",
+    "Baseball",
+    "Basketball",
+    "Basketball - 3 X 3",
+    "Beach Volleyball",
+    "Bocce",
+    "Boccia (AWD)",
+    "Bowls - Indoor",
+    "Bowls - Lawn",
+    "Canoe Polo",
+    "Cheerleading",
+    "Clay Target",
+    "Cricket (Outdoor)",
+    "Croquet",
+    "Cross Country",
+    "Curling",
+    "Cycling - Cyclocross",
+    "Cycling - Mountain biking",
+    "Cycling - Road",
+    "Cycling - Track",
+    "Disability Sports",
+    "Diving",
+    "Dragon Boats",
+    "Equestrian",
+    "Fencing",
+    "Floorball",
+    "Football (Outdoor)",
+    "Futsal",
+    "Golf",
+    "Gymsports",
+    "Handball",
+    "Hockey (Outdoor)",
+    "Ice Hockey",
+    "Inline Hockey",
+    "Judo",
+    "Karate",
+    "Kart Sport",
+    "Kayaking - Sprint",
+    "Kayaking - White Water",
+    "Kilikiti",
+    "Ki O Rahi",
+    "Korfball",
+    "Lacrosse",
+    "Life saving - Surf",
+    "Marching",
+    "Moto-Cross",
+    "Multi Sports",
+    "Netball (Outdoor)",
+    "Orienteering",
+    "Petanque",
+    "Road Racing",
+    "Rowing",
+    "Rugby League",
+    "Rugby Sevens",
+    "Rugby Union",
+    "Shooting (Target)",
+    "Skiing",
+    "8 Ball",
+    "Snowboarding",
+    "Softball",
+    "Sport Climbing",
+    "Squash",
+    "Surfing",
+    "Swimming",
+    "Synchronised Swimming",
+    "Table tennis",
+    "Tennis",
+    "TenPin Bowling",
+    "Touch",
+    "Triathlon/Duathlon",
+    "Ultimate frisbee",
+    "Underwater Hockey",
+    "Volleyball",
+    "Waka Ama",
+    "Water Polo",
+    "Weightlifting",
+    "Windsurfing",
+    "Wrestling",
+    "X Country Skiing",
+    "Yachting",
+]
 
 
 '''
@@ -96,12 +183,13 @@ def cleaning(form_list):
     return headings, form_list
 
 
-'''
-with open("form.csv", 'r') as f:
-    reader = csv.reader(f)
-    csv_data = list(reader)
-headings, data = cleaning(csv_data)
-'''
+def unique_sports(data):
+    sports = set()
+    for row in data:
+        row_sports = row[4].split(',')
+        for sport in row_sports:
+            sports.add(sport.strip())
+    return list(sports)
 
 @app.route('/csv')
 def csv_view():
@@ -109,25 +197,28 @@ def csv_view():
         reader = csv.reader(f)
         csv_data = list(reader)
     headings, data = cleaning(csv_data)
-    return render_template('csvdata.html', headings=headings, data=data[:5])  # Pass first 5 rows of data
-
+    return render_template('csvdata.html', headings=headings, data=data[:5])
 
 @app.route('/')
 def home():
     return render_template('home.html')
 
-'''
-# Move this into views.py
-@app.route('/')
-def index():
-    new_person = People(first_name='Steve', last_name='Stevenson', email='jhdfgw4e5sdfgsdfajojs76@example.com')
-    db.session.add(new_person)
-    db.session.commit()
-    students = People.query.all()
-    return render_template('index.html', students=students)
-'''
+@app.route('/assign_sports', methods=['GET', 'POST'])
+def assign_sports():
+    if request.method == 'POST':
+        mappings = request.form.to_dict()
+        print(mappings)  # save these mappings for further processing.
+        return redirect(url_for('home'))
+    
+    with open("form.csv", 'r') as f:
+        reader = csv.reader(f)
+        csv_data = list(reader)
+    headings, data = cleaning(csv_data)
+    unique_sports_list = unique_sports(data)
+
+    return render_template('assign_sports.html', unique_sports=unique_sports_list, sports_list=sports_list)
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all() # This creates the instance directory if does not exist
+        db.create_all()  # Creates the instance directory if it does not exist
     app.run(debug=True)
