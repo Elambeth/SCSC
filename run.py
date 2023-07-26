@@ -21,8 +21,8 @@ class People(db.Model):
 class Sports(db.Model):
     __tablename__ = 'sports'
     id = db.Column(db.Integer, primary_key=True)
-    csv_name = db.Column(db.String, nullable=False)
-    standard_name = db.Column(db.String, nullable=False)
+    csv_sport = db.Column(db.String, nullable=False, unique=True)
+    standard_sport = db.Column(db.String, nullable=False)
 
 class Students(db.Model):
     __tablename__ = 'students'
@@ -207,9 +207,16 @@ def home():
 def assign_sports():
     if request.method == 'POST':
         mappings = request.form.to_dict()
-        print(mappings)  # save these mappings for further processing.
-        return redirect(url_for('home'))
-    
+        for csv_sport, standard_sport in mappings.items():
+            mapping = Sports.query.filter_by(csv_sport=csv_sport).first()
+            if mapping:
+                mapping.standard_sport = standard_sport
+            else:
+                mapping = Sports(csv_sport=csv_sport, standard_sport=standard_sport)
+                db.session.add(mapping)
+        db.session.commit()
+        return redirect(url_for('results'))
+
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
@@ -217,6 +224,7 @@ def assign_sports():
     unique_sports_list = unique_sports(data)
 
     return render_template('assign_sports.html', unique_sports=unique_sports_list, sports_list=sports_list)
+
 
 if __name__ == "__main__":
     with app.app_context():
