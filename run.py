@@ -1,6 +1,8 @@
 
 from flask import Flask,render_template
 from flask_sqlalchemy import SQLAlchemy
+import csv
+
 
 db = SQLAlchemy()
 app = Flask(__name__)
@@ -63,6 +65,58 @@ class StudentTeam(db.Model):
 #=========================================================
 
 
+
+
+
+
+'''
+def unique_sports(csv_data):
+    sports = set()
+    for row in csv_data:
+        sports.add(row[6])
+    return list(sports)
+
+'''
+def cleaning(form_list):
+        # Pop the headings to a list
+    headings = []
+    if len(form_list) > 0:
+        headings.append(form_list.pop(0))
+    #remove the uneeded parts from the csv, this could be done by the user...
+    for i in form_list:
+        if len(i) > 9:
+            del i[9]
+        if len(i) > 8:
+            del i[8]
+        if len(i) > 7:
+            del i[7]
+        if len(i) > 0:
+            del i[0]
+
+    return headings, form_list
+
+
+'''
+with open("form.csv", 'r') as f:
+    reader = csv.reader(f)
+    csv_data = list(reader)
+headings, data = cleaning(csv_data)
+'''
+
+@app.route('/csv')
+def csv_view():
+    with open("form.csv", 'r') as f:
+        reader = csv.reader(f)
+        csv_data = list(reader)
+    headings, data = cleaning(csv_data)
+    return render_template('csvdata.html', headings=headings, data=data[:5])  # Pass first 5 rows of data
+
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+'''
 # Move this into views.py
 @app.route('/')
 def index():
@@ -71,6 +125,7 @@ def index():
     db.session.commit()
     students = People.query.all()
     return render_template('index.html', students=students)
+'''
 
 if __name__ == "__main__":
     with app.app_context():
