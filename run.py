@@ -19,10 +19,17 @@ class People(db.Model):
     email = db.Column(db.String, nullable=False, unique=True)
 
 class Sports(db.Model):
-    __tablename__ = 'sports'
+    __tablename__ = 'standard_sports'
     id = db.Column(db.Integer, primary_key=True)
-    csv_sport = db.Column(db.String, nullable=False, unique=True)
-    standard_sport = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, unique=True, nullable=False)
+
+
+class SportMapping(db.Model):
+    __tablename__ = 'sport_mapping'
+    id = db.Column(db.Integer, primary_key=True)
+    csv_sport = db.Column(db.String, nullable=False)
+    standard_sport_id = db.Column(db.Integer, db.ForeignKey('standard_sports.id'), nullable=False)
+
 
 class Students(db.Model):
     __tablename__ = 'students'
@@ -156,14 +163,6 @@ sports_list = [
 ]
 
 
-'''
-def unique_sports(csv_data):
-    sports = set()
-    for row in csv_data:
-        sports.add(row[6])
-    return list(sports)
-
-'''
 def cleaning(form_list):
         # Pop the headings to a list
     headings = []
@@ -203,30 +202,33 @@ def csv_view():
 def home():
     return render_template('home.html')
 
-@app.route('/assign_sports', methods=['GET', 'POST'])
-def assign_sports():
-    if request.method == 'POST':
-        mappings = request.form.to_dict()
-        for csv_sport, standard_sport in mappings.items():
-            mapping = Sports.query.filter_by(csv_sport=csv_sport).first()
-            if mapping:
-                mapping.standard_sport = standard_sport
-            else:
-                mapping = Sports(csv_sport=csv_sport, standard_sport=standard_sport)
-                db.session.add(mapping)
-        db.session.commit()
-        return redirect(url_for('results'))
-
+@app.route('/map_sports')
+def map_sports():
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
-    headings, data = cleaning(csv_data)
-    unique_sports_list = unique_sports(data)
+    headings, form_list = cleaning(csv_data)
+    sports = unique_sports(form_list)
+    return render_template('map_sports.html', sports=sports, standard_sports=sports_list)
 
-    return render_template('assign_sports.html', unique_sports=unique_sports_list, sports_list=sports_list)
 
+@app.route('/submit_mapping', methods=['POST'])
+def submit_mapping():
+    mappings = dict(request.form)
+    for csv_sport, standard_sport in mappings.items():
+        standard_sport_obj = Sports.query.filter_by(name=standard_sport).first()
+        if standard_sport_obj:
+            mapping = SportMapping(csv_sport=csv_sport, standard_sport_id=standard_sport_obj.id)
+            db.session.add(mapping)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Creates the instance directory if it does not exist
+        db.create_all()
+        for sport in sports_list:
+            if not Sports.query.filter_by(name=sport).first():
+                new_sport = Sports(name=sport)
+                db.session.add(new_sport)
+        db.session.commit()
     app.run(debug=True)

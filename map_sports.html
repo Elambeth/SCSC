@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map Sports</title>
+</head>
+<body>
+    <h1>Map CSV sports to Standard sports</h1>
+    <form action="{{ url_for('submit_mapping') }}" method="post">
+        <table>
+            <tr>
+                <th>CSV Sport</th>
+                <th>Standard Sport</th>
+            </tr>
+            {% for sport in sports %}
+            <tr>
+                <td>{{ sport }}</td>
+                <td>
+                    <select name="{{ sport }}">
+                        {% for standard_sport in standard_sports %}
+                        <option value="{{ standard_sport }}">{{ standard_sport }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="Submit Mapping">
+    </form>
+</body>
+</html>
