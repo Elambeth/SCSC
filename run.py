@@ -29,6 +29,7 @@ class SportMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     csv_sport = db.Column(db.String, nullable=False)
     standard_sport_id = db.Column(db.Integer, db.ForeignKey('standard_sports.id'), nullable=False)
+    standard_sport = db.relationship('Sports', backref='sport_mappings')
 
 
 class Students(db.Model):
@@ -61,7 +62,7 @@ class Teams(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     staff_id = db.Column(db.Integer, db.ForeignKey('staff.id'), nullable=False)
     coach_id = db.Column(db.Integer, db.ForeignKey('staff.id'), nullable=False)
-    sport_id = db.Column(db.Integer, db.ForeignKey('sports.id'), nullable=False)
+    sport_id = db.Column(db.Integer, db.ForeignKey('standard_sports.id'), nullable=False)
     name = db.Column(db.String, nullable=False)
     division = db.Column(db.String, nullable=False)
 
@@ -71,7 +72,6 @@ class StudentTeam(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
 #=========================================================
-
 
 
 sports_list = [
@@ -192,7 +192,7 @@ def unique_sports(data):
 
 @app.route('/csv')
 def csv_view():
-    with open("form.csv", 'r') as f:
+    with open("snazzy.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
     headings, data = cleaning(csv_data)
@@ -202,14 +202,52 @@ def csv_view():
 def home():
     return render_template('home.html')
 
-@app.route('/map_sports')
+
+@app.route('/delete_sports', methods=['GET', 'POST'])
+def delete_sports():
+    if request.method == 'POST':
+        sports_to_delete = request.form.getlist('sports_to_delete')
+        with open("snazzy.csv", 'r') as f:
+            reader = csv.reader(f)
+            csv_data = list(reader)
+        headings, form_list = cleaning(csv_data)
+        for row in form_list:
+            row_sports = row[4].split(',')
+            row_sports = [sport.strip() for sport in row_sports if sport.strip() not in sports_to_delete]
+            row[4] = ','.join(row_sports)
+        with open("snazzy.csv", 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(headings)
+            writer.writerows(form_list)
+        return redirect(url_for('map_sports')) # Redirecting to map_sports route
+    with open("snazzy.csv", 'r') as f:
+        reader = csv.reader(f)
+        csv_data = list(reader)
+    headings, form_list = cleaning(csv_data)
+    sports = unique_sports(form_list)
+    return render_template('delete_sports.html', sports=sports)
+
+
+
+
+@app.route('/map_sports', methods=['GET', 'POST'])
 def map_sports():
-    with open("form.csv", 'r') as f:
+    if request.method == 'POST':
+        mappings = dict(request.form)
+        for csv_sport, standard_sport in mappings.items():
+            standard_sport_obj = Sports.query.filter_by(name=standard_sport).first()
+            if standard_sport_obj:
+                mapping = SportMapping(csv_sport=csv_sport, standard_sport_id=standard_sport_obj.id)
+                db.session.add(mapping)
+        db.session.commit()
+        return redirect(url_for('display_mapping'))
+    with open("snazzy.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
     headings, form_list = cleaning(csv_data)
     sports = unique_sports(form_list)
     return render_template('map_sports.html', sports=sports, standard_sports=sports_list)
+
 
 
 @app.route('/submit_mapping', methods=['POST'])
@@ -221,7 +259,23 @@ def submit_mapping():
             mapping = SportMapping(csv_sport=csv_sport, standard_sport_id=standard_sport_obj.id)
             db.session.add(mapping)
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('display_mapping'))
+
+
+@app.route('/display_mapping')
+def display_mapping():
+    mappings = db.session.query(SportMapping).join(Sports, SportMapping.standard_sport_id == Sports.id).all()
+    return render_template('display_mapping.html', mappings=mappings)
+
+
+@app.route('/grid')
+def grid_view():
+    return render_template('grid.html')
+
+@app.route('/Netball')
+def netball():
+    return render_template('netball.html')
+
 
 if __name__ == "__main__":
     with app.app_context():
