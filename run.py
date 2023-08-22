@@ -168,35 +168,17 @@ def cleaning(form_list):
     headings = []
     if len(form_list) > 0:
         headings.append(form_list.pop(0))
-    #remove the uneeded parts from the csv, this could be done by the user...
-    for i in form_list:
-        if len(i) > 9:
-            del i[9]
-        if len(i) > 8:
-            del i[8]
-        if len(i) > 7:
-            del i[7]
-        if len(i) > 0:
-            del i[0]
-
     return headings, form_list
 
 
 def unique_sports(data):
     sports = set()
     for row in data:
-        row_sports = row[4].split(',')
+        row_sports = row[5].split(',')
         for sport in row_sports:
             sports.add(sport.strip())
     return list(sports)
 
-@app.route('/csv')
-def csv_view():
-    with open("snazzy.csv", 'r') as f:
-        reader = csv.reader(f)
-        csv_data = list(reader)
-    headings, data = cleaning(csv_data)
-    return render_template('csvdata.html', headings=headings, data=data[:5])
 
 @app.route('/')
 def home():
@@ -212,9 +194,9 @@ def delete_sports():
             csv_data = list(reader)
         headings, form_list = cleaning(csv_data)
         for row in form_list:
-            row_sports = row[4].split(',')
+            row_sports = row[5].split(',')
             row_sports = [sport.strip() for sport in row_sports if sport.strip() not in sports_to_delete]
-            row[4] = ','.join(row_sports)
+            row[5] = ','.join(row_sports)
         with open("snazzy.csv", 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(headings)
@@ -248,8 +230,7 @@ def map_sports():
     sports = unique_sports(form_list)
     return render_template('map_sports.html', sports=sports, standard_sports=sports_list)
 
-
-
+'''
 @app.route('/submit_mapping', methods=['POST'])
 def submit_mapping():
     mappings = dict(request.form)
@@ -260,7 +241,7 @@ def submit_mapping():
             db.session.add(mapping)
     db.session.commit()
     return redirect(url_for('display_mapping'))
-
+'''
 
 @app.route('/display_mapping')
 def display_mapping():
@@ -275,6 +256,10 @@ def grid_view():
 @app.route('/Netball')
 def netball():
     return render_template('netball.html')
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
 
 
 if __name__ == "__main__":

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sport Mappings</title>
+    <!-- You can add CSS styling here -->
+</head>
+<body>
+    <div class="container">
+        <h1>Sport Mappings</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>CSV Sport</th>
+                    <th>Mapped Sport</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mapping in mappings %}
+                <tr>
+                    <td>{{ mapping.csv_sport }}</td>
+                    <td>{{ mapping.standard_sport.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
