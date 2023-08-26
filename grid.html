@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+            justify-items: center;
+        }
+        .grid-item {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 20px;
+            text-align: center;
+            box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.2);
+            transition: all 0.3s ease-out;
+            width: 80%;
+            height: 0; 
+            padding-bottom: 26.66%; 
+        }
+        .grid-item:hover {
+            box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.4);
+            transform: scale(1.05);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            padding-top: 20px;
+            font-size: 2.5em;
+        }
+        .grid-item a {
+            color: #333;
+            text-decoration: none;
+            display: block;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sports Dashboard</h1>
+    <div class="grid-container">
+        <div class="grid-item">Basketball</div>
+        <div class="grid-item"><a href="/Netball">Netball</a></div>
+        <div class="grid-item">Cricket</div>
+        <div class="grid-item">Volleyball</div>
+        <div class="grid-item">Soccer</div>
+        <div class="grid-item">Tennis</div>
+        <div class="grid-item">Futsul</div>
+        <div class="grid-item">Rugby</div>
+        <div class="grid-item">Golf</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student List</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Student List</h1>
+        <table class="table table-bordered table-hover table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for person in all_people %}
+                <tr>
+                    <td>{{ person.id }}</td>
+                    <td>{{ person.first_name }}</td>
+                    <td>{{ person.last_name }}</td>
+                    <td>{{ person.email }}</td>
+                    <td>{{ person.gender }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

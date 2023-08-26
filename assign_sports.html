@@ -1,0 +1,14 @@
+<form method="POST">
+    {% for sport in sports %}
+        <div>
+            <label for="{{ sport.id }}">{{ sport.csv_sport }}</label>
+            <select name="{{ sport.id }}">
+                <option value="">Select a standard sport...</option>
+                {% for standard_sport in standard_sports %}
+                    <option value="{{ standard_sport.id }}">{{ standard_sport.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
