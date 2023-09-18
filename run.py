@@ -38,9 +38,11 @@ class Students(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
+    person = db.relationship('People', backref='students')
     year_level = db.Column(db.String, nullable=False)
     health_info = db.Column(db.String)
     payment_method = db.Column(db.String)
+
 
 
 class StaffType(db.Model):
@@ -78,6 +80,12 @@ class StudentTeam(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+
+class StudentSport(db.Model):
+    __tablename__ = 'student_sport'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    sport_id = db.Column(db.Integer, db.ForeignKey('standard_sports.id'), nullable=False)
 #=========================================================
 
 
@@ -196,7 +204,7 @@ def home():
 def delete_sports():
     if request.method == 'POST':
         sports_to_delete = request.form.getlist('sports_to_delete')
-        with open("snazzy.csv", 'r') as f:
+        with open("form.csv", 'r') as f:
             reader = csv.reader(f)
             csv_data = list(reader)
         headings, form_list = cleaning(csv_data)
@@ -204,12 +212,12 @@ def delete_sports():
             row_sports = row[5].split(',')
             row_sports = [sport.strip() for sport in row_sports if sport.strip() not in sports_to_delete]
             row[5] = ','.join(row_sports)
-        with open("snazzy.csv", 'w', newline='') as f:
+        with open("form.csv", 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(headings)
             writer.writerows(form_list)
         return redirect(url_for('map_sports')) # Redirecting to map_sports route
-    with open("snazzy.csv", 'r') as f:
+    with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
     headings, form_list = cleaning(csv_data)
@@ -235,7 +243,7 @@ def map_sports():
                     db.session.add(mapping)
         db.session.commit()
         return redirect(url_for('display_mapping'))
-    with open("snazzy.csv", 'r') as f:
+    with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
     headings, form_list = cleaning(csv_data)
@@ -247,18 +255,6 @@ def map_sports():
 def display_mapping():
     mappings = db.session.query(SportMapping).join(Sports, SportMapping.standard_sport_id == Sports.id).all()
     return render_template('display_mapping.html', mappings=mappings)
-
-
-
-
-@app.route('/grid')
-def grid_view():
-    return render_template('grid.html')
-
-
-@app.route('/Netball')
-def netball():
-    return render_template('netball.html')
 
 
 @app.route('/dashboard')
@@ -286,13 +282,57 @@ def adding_people():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/populating_students')
+def populating_students():
+    #where email is in form.csv 
+    with open("form.csv", 'r') as f:
+            reader = csv.reader(f)
+            csv_data = list(reader)
+            headings, listy = cleaning(csv_data)
+    # Extract the relevant information from each row
+    for row in listy:
+        email = row[2].lower()
+        year_level = row[4]
+        health_info = row[6]
+        payment_method = row[9]
+ # Query the People table to get the ID of the person with this email
+        person = People.query.filter_by(email=email).first()
+        if person:
+            # Create a new Student record for this person
+            new_student = Students(
+                people_id=person.id,
+                year_level=year_level,
+                health_info=health_info,
+                payment_method=payment_method
+            )
+            
+            # Add to the session
+            db.session.add(new_student)
+                
+            # Commit the session to insert all new Students
+    db.session.commit()
+    return redirect(url_for('student_list'))
+
+
 @app.route('/student_list')
 def student_list():
+    students = Students.query.all()
+    return render_template('student_list.html', students=students)
+
+
+@app.route('/people_list')
+def people_list():
     all_people = People.query.all()  # Querying all rows from the People table
-    return render_template('student_list.html', all_people=all_people)
+    return render_template('people_list.html', all_people=all_people)
 
+@app.route('/unassigned_students')
+def teams():
+    # Query for students not in any team
+    unassigned_students = db.session.query(Students).outerjoin(
+        StudentTeam, Students.id == StudentTeam.student_id
+    ).filter(StudentTeam.team_id.is_(None)).all()
 
-
+    return render_template('unassigned_students.html', students=unassigned_students)
 
 if __name__ == "__main__":
     with app.app_context():

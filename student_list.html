@@ -6,38 +6,50 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            margin: 20px;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: #f4f4f4;
+        }
+        .container {
+            margin-top: 40px;
         }
         h1 {
-            margin-bottom: 30px;
+            color: #333;
+            margin-bottom: 40px;
+            text-align: center;
         }
-        table {
-            width: 100%;
+        .table {
+            background: #fff;
+            border-radius: 4px;
         }
+        .table th, .table td {
+            border: none;
+        }
+        .table thead th {
+            background: #17a2b8;
+            color: #fff;
+        }
+        
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Student List</h1>
-        <table class="table table-bordered table-hover table-striped">
-            <thead class="thead-dark">
+        <h1>Student List</h1>
+        <table class="table table-bordered table-hover">
+            <thead>
                 <tr>
                     <th>ID</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Gender</th>
+                    <th>People ID</th>
+                    <th>Year Level</th>
+                    <th>Health Info</th>
                 </tr>
             </thead>
             <tbody>
-                {% for person in all_people %}
+                {% for student in students %}
                 <tr>
-                    <td>{{ person.id }}</td>
-                    <td>{{ person.first_name }}</td>
-                    <td>{{ person.last_name }}</td>
-                    <td>{{ person.email }}</td>
-                    <td>{{ person.gender }}</td>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.people_id }}</td>
+                    <td>{{ student.year_level }}</td>
+                    <td>{{ student.health_info }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
