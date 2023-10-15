@@ -175,6 +175,7 @@ sports_list = [
     "Wrestling",
     "X Country Skiing",
     "Yachting",
+    "Other",
 ]
 
 
@@ -257,6 +258,11 @@ def display_mapping():
     return render_template('display_mapping.html', mappings=mappings)
 
 
+@app.route('/sports')
+def display_sports():
+    sports_data = db.session.query(SportMapping.id, Sports.name).join(Sports, Sports.id == SportMapping.standard_sport_id).all()
+    return render_template('sports.html', sports_data=sports_data)
+
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
@@ -291,7 +297,8 @@ def populating_students():
             headings, listy = cleaning(csv_data)
     # Extract the relevant information from each row
     for row in listy:
-        email = row[2].lower()
+        email = row[2].replace(" ","").lower()
+        print(email)
         year_level = row[4]
         health_info = row[6]
         payment_method = row[9]
@@ -314,6 +321,60 @@ def populating_students():
     return redirect(url_for('student_list'))
 
 
+def linking():
+    # Open the CSV
+    with open("form.csv", 'r') as f:
+        reader = csv.reader(f)
+        csv_data = list(reader)
+        headings, bulk = cleaning(csv_data)
+    
+    # Iterate over each row to get student details
+    for row in bulk:
+        email = row[2].replace(" ","").lower()
+        
+        # Get people_id using the email
+        person = People.query.filter_by(email=email).first()
+        if not person:
+            # Skip to the next row if the person with this email is not found
+            continue
+        
+        # Get student_id using the people_id
+        student = Students.query.filter_by(people_id=person.id).first()
+        if not student:
+            # Skip to the next row if the student with this people_id is not found
+            continue
+        
+        # Get the sports the student plays
+        student_sports = row[5].split(',')
+        # For each sport, get the sport_id and add an entry in the StudentSport table
+        for sport_name in student_sports:
+            sport_name = sport_name.strip()  # Remove any leading or trailing whitespaces
+            #print(sport_name)
+            sport = SportMapping.query.filter_by(csv_sport=sport_name).first()
+            #print(sport)
+            if sport:
+                # Check if this mapping already exists
+                existing_entry = StudentSport.query.filter_by(student_id=student.id, sport_id=sport.id).first()
+                print(existing_entry)
+                if not existing_entry:
+                    new_student_sport = StudentSport(student_id=student.id, sport_id=sport.id)
+                    db.session.add(new_student_sport)
+    
+    # Commit the changes to the database
+    db.session.commit()
+
+@app.route('/link_students_sports')
+def link_students_sports():
+    linking()
+    return redirect(url_for('display_student_sports'))
+
+@app.route('/display_student_sports')
+def display_student_sports():
+    student_sports = StudentSport.query.all()
+    return render_template('student_sport_list.html', student_sports=student_sports)
+
+
+
 @app.route('/student_list')
 def student_list():
     students = Students.query.all()
@@ -332,7 +393,15 @@ def teams():
         StudentTeam, Students.id == StudentTeam.student_id
     ).filter(StudentTeam.team_id.is_(None)).all()
 
+    # Fetch the sports for each unassigned student
+    for student in unassigned_students:
+        student.sports = db.session.query(Sports.name).join(
+            StudentSport, Sports.id == StudentSport.sport_id
+        ).filter(StudentSport.student_id == student.id).all()
+        student.sports = [sport[0] for sport in student.sports]
+
     return render_template('unassigned_students.html', students=unassigned_students)
+
 
 if __name__ == "__main__":
     with app.app_context():

@@ -18,7 +18,7 @@
             <th>Email</th>
             <th>Gender</th>
             <th>Year Level</th>
-            <th>Health Info</th>
+            <th>Sports Played</th>
         </tr>
     </thead>
     <tbody>
@@ -30,7 +30,7 @@
                 <td>{{ student.person.email }}</td>
                 <td>{{ student.person.gender }}</td>
                 <td>{{ student.year_level }}</td>
-                <td>{{ student.health_info }}</td>
+                <td>{{ ', '.join(student.sports) }}</td>
             </tr>
         {% endfor %}
     </tbody>
