@@ -265,7 +265,17 @@ def display_sports():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    # Querying Sports which are mapped in SportMapping table
+    sports = db.session.query(Sports).join(
+        SportMapping, Sports.id == SportMapping.standard_sport_id
+    ).distinct().all()
+    return render_template('dashboard.html', sports=sports)
+
+
+@app.route('/sport/<int:sport_id>')
+def sport_detail(sport_id):
+    sport = Sports.query.get_or_404(sport_id)  # Get the sport or return a 404 error if it's not found
+    return render_template('sport_detail.html', sport=sport)
 
 
 @app.route('/adding_people')

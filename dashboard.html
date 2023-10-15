@@ -130,9 +130,15 @@
     <button class="openbtn" onclick="toggleSidebar()">
         <img src="{{ url_for('static', filename='arrow.svg') }}" id="arrow-svg" alt="Toggle Arrow">
     </button>
-    <div id="main">
-        <h1>Welcome to Teambuilder</h1>
-        <p>This is your Dashboard</p>
+    <h1>Sports Dashboard</h1>
+    <div class="grid-container">
+        {% for sport in sports %}
+            <div class="grid-item">
+                <a href="{{ url_for('sport_detail', sport_id=sport.id) }}">
+                    {{ sport.name }}
+                </a>
+            </div>
+        {% endfor %}
     </div>
     <script>
         function toggleSidebar() {
