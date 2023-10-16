@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-light: #f5f5f5;
+            --text-dark: #333;
+            --hover-light: #eee;
+            --button-light: #ccc;
+            --button-hover: #bbb;
+            --sidebar-light: #e0e0e0;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-light);
+        }
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-light);
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 20px;
+        }
+        .sidebar .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 15px;
+        }
+        .sidebar .logo-container img,
+        .sidebar a img {
+            width: 30px;  /* Updated size */
+            height: 30px;  /* Updated size */
+            margin-right: 10px;  /* Consistent margin */
+        }
+        .sidebar .software-name {
+            font-size: 25px;
+            font-weight: bold;
+            color: var(--text-dark);
+            text-transform: lowercase;
+        }
+        .sidebar.collapsed .software-name {
+            display: none;
+        }
+        .sidebar a {
+            padding: 8px 15px 8px 15px;  /* Updated padding */
+            text-decoration: none;
+            font-size: 18px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+        }
+        .sidebar a span {
+            display: inline;
+        }
+        .sidebar.collapsed a span {
+            display: none;
+        }
+        .sidebar a:hover {
+            background-color: var(--hover-light);
+        }
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: var(--button-light);
+            color: var(--text-dark);
+            padding: 10px;
+            border: none;
+            position: absolute;
+            top: 50%;
+            left: 250px;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            line-height: 20px;
+        }
+        .openbtn:hover {
+            background-color: var(--button-hover);
+        }
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 250px;
+        }
+        h2 {
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body>
+    <div id="mySidebar" class="sidebar">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='persian.svg') }}" alt="Logo">
+            <span class="software-name">teambuilder</span>
+        </div>
+        <br>
+        <br>
+        <a href="/sports_grid">
+            <img src="{{ url_for('static', filename='sports.svg') }}" alt="Sports Icon">
+            <span>Sports</span>
+        </a>
+        <a href="/student_list">
+            <img src="{{ url_for('static', filename='student_list.svg') }}" alt="Student List Icon">
+            <span>Students</span>
+        </a>
+        <a href="/assignstudents">
+            <img src="{{ url_for('static', filename='sort.svg') }}" alt="Sort Icon">
+            <span>Assign</span>
+        </a>
+    
+        <a href="#">
+            <img src="{{ url_for('static', filename='census.svg') }}" alt="Census Icon">
+            <span>Census</span>
+        </a>
+    </div>
+    <button class="openbtn" onclick="toggleSidebar()">
+        <img src="{{ url_for('static', filename='arrow.svg') }}" id="arrow-svg" alt="Toggle Arrow">
+    </button>
+    <div id="main">
+        <h1>Welcome to Teambuilder</h1>
+        <p>This is your Dashboard</p>
+    </div>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const main = document.getElementById("main");
+            const button = document.querySelector(".openbtn");
+            
+            if (sidebar.style.width === "60px") {
+                sidebar.style.width = "250px";
+                main.style.marginLeft = "250px";
+                button.style.left = "250px";
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.style.width = "60px";
+                main.style.marginLeft = "60px";
+                button.style.left = "60px";
+                sidebar.classList.add('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>

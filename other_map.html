@@ -1,0 +1,36 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reallocate Other Sports</title>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="my-4">Reallocate Other Sports</h1>
+            <form action="{{ url_for('other_map') }}" method="post">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>CSV Sport Name</th>
+                            <th>New Sport Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sport_mapping in other_sports %}
+                            <tr>
+                                <td>{{ sport_mapping.csv_sport }}</td>
+                                <td><input type="text" name="{{ sport_mapping.csv_sport }}" required></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    </body>
+    </html>

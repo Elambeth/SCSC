@@ -1,0 +1,28 @@
+<div id="mySidebar" class="sidebar">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='persian.svg') }}" alt="Logo">
+        <span class="software-name">teambuilder</span>
+    </div>
+    <br>
+    <br>
+    <a href="/sports">
+        <img src="{{ url_for('static', filename='sports.svg') }}" alt="Sports Icon">
+        <span>Sports</span>
+    </a>
+    <a href="/student_list">
+        <img src="{{ url_for('static', filename='student_list.svg') }}" alt="Student List Icon">
+        <span>Students</span>
+    </a>
+    <a href="/assignstudents">
+        <img src="{{ url_for('static', filename='sort.svg') }}" alt="Sort Icon">
+        <span>Assign</span>
+    </a>
+
+    <a href="#">
+        <img src="{{ url_for('static', filename='census.svg') }}" alt="Census Icon">
+        <span>Census</span>
+    </a>
+</div>
+<button class="openbtn" onclick="toggleSidebar()">
+    <img src="{{ url_for('static', filename='arrow.svg') }}" id="arrow-svg" alt="Toggle Arrow">
+</button>

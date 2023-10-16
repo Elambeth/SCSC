@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Teambuilder{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% include 'sidebar.html' %}
+    <div id="main">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const main = document.getElementById("main");
+            const button = document.querySelector(".openbtn");
+            
+            if (sidebar.style.width === "60px") {
+                sidebar.style.width = "250px";
+                main.style.marginLeft = "250px";
+                button.style.left = "250px";
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.style.width = "60px";
+                main.style.marginLeft = "60px";
+                button.style.left = "60px";
+                sidebar.classList.add('collapsed');
+            }
+        }
+    }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

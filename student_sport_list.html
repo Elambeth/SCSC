@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sports List</title>
+</head>
+<body>
+    <h1>List of Student Sports</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Sport ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student_sport in student_sports %}
+                <tr>
+                    <td>{{ student_sport.student_id }}</td>
+                    <td>{{ student_sport.sport_id }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

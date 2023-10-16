@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student List</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f4f4f4;
+        }
+        .container {
+            margin-top: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .table {
+            background: #fff;
+            border-radius: 4px;
+        }
+        .table th, .table td {
+            border: none;
+        }
+        .table thead th {
+            background: #17a2b8;
+            color: #fff;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Student List</h1>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>People ID</th>
+                    <th>Year Level</th>
+                    <th>Health Info</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.people_id }}</td>
+                    <td>{{ student.year_level }}</td>
+                    <td>{{ student.health_info }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
