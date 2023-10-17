@@ -243,7 +243,7 @@ def map_sports():
                     mapping = SportMapping(csv_sport=csv_sport, standard_sport_id=standard_sport_obj.id)
                     db.session.add(mapping)
         db.session.commit()
-        return redirect(url_for('display_mapping'))
+        return redirect(url_for('other_map'))
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
@@ -319,7 +319,7 @@ def adding_people():
                 gender=people_list[i][2])
             db.session.add(new_person)
     db.session.commit()
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('populating_students'))
 
 
 @app.route('/populating_students')
@@ -352,7 +352,7 @@ def populating_students():
                 
             # Commit the session to insert all new Students
     db.session.commit()
-    return redirect(url_for('student_list'))
+    return redirect(url_for('link_student_sports'))
 
 
 @app.route('/link_students_sports')
@@ -396,7 +396,7 @@ def link_students_sports():
     # Commit the changes to the database
     db.session.commit()
 
-    return redirect(url_for('display_student_sports'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/display_student_sports')
@@ -425,34 +425,39 @@ def display_student_sports():
 
 
 
+
 @app.route('/sport/<int:sport_id>')
 def sport_detail(sport_id):
     sport = Sports.query.get_or_404(sport_id)  # Get the sport or return a 404 error if it's not found
-    
+
+    # Get all teams of this sport
+    teams = Teams.query.filter_by(sport_id=sport_id).all()
+
     # Get all student_ids which are mapped to the current sport in StudentSport table
     student_ids = [mapping.student_id for mapping in StudentSport.query.filter_by(sport_id=sport_id).all()]
-    
+
     # Fetch all Students that play the sport using the retrieved student_ids
     students = Students.query.filter(Students.id.in_(student_ids)).all()
+
+    # For each student, determine the team they're in (if any) and fetch their gender and year level
+    for student in students:
+        team = db.session.query(Teams).join(
+            StudentTeam, Teams.id == StudentTeam.team_id
+        ).filter(StudentTeam.student_id == student.id).first()
+        student.team_name = team.name if team else "Unassigned"
+        
+        # Fetch additional data for the student
+        person = People.query.get(student.people_id)
+        student.first_name = person.first_name
+        student.last_name = person.last_name
+        student.gender = person.gender
+        student.year_level = student.year_level  # This is directly from the Students model
 
     # Fetch the corresponding csv_sport name from SportMapping table
     mapping = SportMapping.query.filter_by(standard_sport_id=sport_id).first()
     csv_sport_name = mapping.csv_sport if mapping else "N/A"
 
-    # Fetch additional data for each student
-    student_data = []
-    for student in students:
-        person = People.query.get(student.people_id)
-        student_data.append({
-            "id": student.id,
-            "first_name": person.first_name,
-            "last_name": person.last_name,
-            "gender": person.gender,
-            "year_level": student.year_level
-        })
-
-    return render_template('sport_detail.html', sport=sport, students=student_data, csv_sport_name=csv_sport_name)
-
+    return render_template('sport_detail.html', sport=sport, students=students, csv_sport_name=csv_sport_name, teams=teams)
 
 
 @app.route('/student_profile/<int:student_id>')
@@ -496,6 +501,26 @@ def sports_grid():
         SportMapping, Sports.id == SportMapping.standard_sport_id
     ).distinct().all()
     return render_template('sports_grid.html', sports=sports)
+#*---------------------------------------------------
+#* These are the functional functions (User Actions)
+#*---------------------------------------------------
+
+@app.route('/add_student_to_team/<int:student_id>', methods=['GET', 'POST'])
+def add_student_to_team(student_id):
+    student = Students.query.get_or_404(student_id)
+    
+    if request.method == 'POST':
+        team_id = request.form.get('team')
+        if team_id:
+            # Add student to the selected team
+            new_student_team = StudentTeam(student_id=student_id, team_id=team_id)
+            db.session.add(new_student_team)
+            db.session.commit()
+            return redirect(url_for('sport_detail', sport_id=student.sport_id))
+    
+    # Get all teams
+    teams = Teams.query.all()
+    return render_template('add_student_to_team.html', student=student, teams=teams)
 
 
 if __name__ == "__main__":

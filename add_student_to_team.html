@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags, styles, and scripts -->
+</head>
+<body>
+    <div class="container">
+        <h2>Add {{ student.first_name }} {{ student.last_name }} to a Team</h2>
+        
+        <form action="{{ url_for('add_student_to_team', student_id=student.id) }}" method="post">
+            <div class="form-group">
+                <label for="team">Select Team:</label>
+                <select name="team" id="team" class="form-control">
+                    {% for team in teams %}
+                    <option value="{{ team.id }}">{{ team.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Add to Team</button>
+        </form>
+    </div>
+</body>
+</html>

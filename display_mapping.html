@@ -2,13 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sport Mappings</title>
-    <!-- You can add CSS styling here -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        h1 {
+            color: #495057;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sport Mappings</h1>
-        <table>
+        <h1 class="my-4">Sport Mappings</h1>
+        <table class="table">
             <thead>
                 <tr>
                     <th>CSV Sport</th>
@@ -24,6 +50,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div class="mt-4">
+            <a href="{{ url_for('adding_people') }}" class="btn btn-primary">Next</a>
+        </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </body>
 </html>
