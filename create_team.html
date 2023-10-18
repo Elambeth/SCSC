@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <!-- Meta tags, styles, and scripts -->
-    <!-- Including Bootstrap for styling -->
+    <!-- Assuming you're using Bootstrap, given the class names -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -11,22 +11,25 @@
             <div class="col-md-8 offset-md-2">
                 <div class="card">
                     <div class="card-header">
-                        <h2>Add {{ student.first_name }} {{ student.last_name }} to a Team</h2>
+                        <h2>Create New Team for {{ sport.name }}</h2>
                     </div>
                     <div class="card-body">
-                        <form action="{{ url_for('add_student_to_team', student_id=student.id) }}" method="post">
+                        <form action="{{ url_for('create_team', sport_id=sport.id) }}" method="post">
                             <div class="form-group">
-                                <label for="team">Select Team:</label>
-                                <select name="team" id="team" class="form-control">
-                                    {% for team in teams %}
-                                    <option value="{{ team.id }}">{{ team.name }}</option>
-                                    {% endfor %}
-                                </select>
+                                <label for="team_name">Team Name:</label>
+                                <input type="text" name="team_name" id="team_name" class="form-control" required>
                             </div>
                             
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Add to Team</button>
+                                <label for="division">Division:</label>
+                                <input type="text" name="division" id="division" class="form-control" required>
+                            </div>
+                            
+                            <!-- You can add more fields like coach, staff, etc. here -->
+                            
+                            <div class="form-group">
                                 <a href="{{ url_for('sports_grid') }}" class="btn btn-secondary">Back</a>
+                                <button type="submit" class="btn btn-primary">Create Team</button>
                             </div>
                         </form>
                     </div>

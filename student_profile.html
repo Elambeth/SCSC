@@ -1,12 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{{ student.person.first_name }} {{ student.person.last_name }}</title>
+    <!-- ... -->
 </head>
 <body>
-    <h1>{{ student.person.first_name }} {{ student.person.last_name }}</h1>
-    <p>Email: {{ student.person.email }}</p>
-    <p>Year Level: {{ student.year_level }}</p>
-    <!-- Add any other student details you want to display -->
+    <div class="container">
+        <h2>Student Profile</h2>
+        
+        <!-- Student Details -->
+        <div class="student-details">
+            <h3>{{ student.first_name }} {{ student.last_name }}</h3>
+            <p>Email: {{ student.email }}</p>
+            <!-- ... Other details ... -->
+        </div>
+        
+        <!-- Sports and Teams List -->
+        <h4>Sports & Teams</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sport</th>
+                    <th>Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sports_teams %}
+                <tr>
+                    <td>{{ item.sport_name }}</td>
+                    <td>{{ item.team_name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
