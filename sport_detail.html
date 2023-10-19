@@ -121,13 +121,18 @@
                 </tr>
             </thead>
             <tbody>
-                {% for student, team in students_with_teams %}
+                {% for student in students %}
                 <tr>
-                    <!-- Making student's name a clickable link -->
                     <td><a href="{{ url_for('student_profile', student_id=student.id) }}">{{ student.person.first_name }} {{ student.person.last_name }}</a></td>
                     <td>{{ student.person.gender }}</td>
                     <td>{{ student.year_level }}</td>
-                    <td><a href="{{ url_for('team_details', team_id=team.id) }}">{{ team.name }}</a></td>
+                    <td>
+                        {% if student.id in student_team_map %}
+                            <a href="{{ url_for('team_details', team_id=student_team_map[student.id].id) }}">{{ student_team_map[student.id].name }}</a>
+                        {% else %}
+                            NOT ASSIGNED
+                        {% endif %}
+                    </td>
                     <td>
                         <div class="kebab-menu">
                             <div class="kebab-icon" data-student-id="{{ student.id }}">

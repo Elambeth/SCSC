@@ -3,6 +3,8 @@ from flask import Flask,render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import and_
 import csv
+from csv import field_size_limit
+
 
 
 db = SQLAlchemy()
@@ -12,6 +14,7 @@ db.init_app(app)
 
 #=========================================================
 # Models
+#=========================================================
 class People(db.Model):
     __tablename__ = 'people'
     id = db.Column(db.Integer, primary_key=True)
@@ -91,7 +94,6 @@ class StudentSport(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     sport_id = db.Column(db.Integer, db.ForeignKey('standard_sports.id'), nullable=False)
 #=========================================================
-
 
 sports_list = [
     "Adventure Racing",
@@ -209,6 +211,7 @@ def home():
 def delete_sports():
     if request.method == 'POST':
         sports_to_delete = request.form.getlist('sports_to_delete')
+        field_size_limit(int(1e6))
         with open("form.csv", 'r') as f:
             reader = csv.reader(f)
             csv_data = list(reader)
@@ -221,7 +224,8 @@ def delete_sports():
             writer = csv.writer(f)
             writer.writerow(headings)
             writer.writerows(form_list)
-        return redirect(url_for('map_sports')) # Redirecting to map_sports route
+        return redirect(url_for('map_sports'))# Redirecting to map_sports route
+    field_size_limit(int(1e6))
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
@@ -248,6 +252,7 @@ def map_sports():
                     db.session.add(mapping)
         db.session.commit()
         return redirect(url_for('other_map'))
+    field_size_limit(int(1e6))
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
@@ -305,9 +310,9 @@ def dashboard():
     return render_template('dashboard.html', sports=sports)
 
 
-
 @app.route('/adding_people')
 def adding_people():
+    field_size_limit(int(1e6))
     with open("student.csv", 'r') as f:
         reader = csv.reader(f)
         people_data = list(reader)
@@ -329,6 +334,7 @@ def adding_people():
 @app.route('/populating_students')
 def populating_students():
     #where email is in form.csv 
+    field_size_limit(int(1e6))
     with open("form.csv", 'r') as f:
             reader = csv.reader(f)
             csv_data = list(reader)
@@ -356,12 +362,13 @@ def populating_students():
                 
             # Commit the session to insert all new Students
     db.session.commit()
-    return redirect(url_for('link_student_sports'))
+    return redirect(url_for('link_students_sports'))
 
 
 @app.route('/link_students_sports')
 def link_students_sports():
     # Open the CSV
+    field_size_limit(int(1e6))
     with open("form.csv", 'r') as f:
         reader = csv.reader(f)
         csv_data = list(reader)
@@ -428,34 +435,30 @@ def display_student_sports():
     return render_template('student_sport_list.html', display_data=display_data)
 
 
-
 @app.route('/sport/<int:sport_id>')
 def sport_detail(sport_id):
-    sport = Sports.query.get_or_404(sport_id)  # Get the sport or return a 404 error if it's not found
-
-    # Get all teams of this sport
+    sport = Sports.query.get_or_404(sport_id)
     teams = Teams.query.filter_by(sport_id=sport_id).all()
 
-    # Fetch students and their associated teams for the given sport
+    # Fetch all students who play the sport
+    students_for_sport = db.session.query(Students).join(
+        StudentSport, Students.id == StudentSport.student_id
+    ).filter(StudentSport.sport_id == sport_id).all()
+
+    # Fetch student-team pairs for the sport
     students_with_teams = db.session.query(Students, Teams).join(
         StudentTeam, Students.id == StudentTeam.student_id
     ).join(
         Teams, Teams.id == StudentTeam.team_id
     ).filter(Teams.sport_id == sport_id).all()
 
-    # For each student, fetch additional data
+    # Create a dictionary to map student IDs to their teams
+    student_team_map = {}
     for student, team in students_with_teams:
-        person = People.query.get(student.people_id)
-        student.first_name = person.first_name
-        student.last_name = person.last_name
-        student.gender = person.gender
-        student.year_level = student.year_level  # This is directly from the Students model
+        student_team_map[student.id] = team
 
-    # Fetch the corresponding csv_sport name from SportMapping table
-    mapping = SportMapping.query.filter_by(standard_sport_id=sport_id).first()
-    csv_sport_name = mapping.csv_sport if mapping else "N/A"
+    return render_template('sport_detail.html', sport=sport, teams=teams, students=students_for_sport, student_team_map=student_team_map)
 
-    return render_template('sport_detail.html', sport=sport, students_with_teams=students_with_teams, csv_sport_name=csv_sport_name, teams=teams)
 
 @app.route('/team/<int:team_id>')
 def team_details(team_id):
@@ -467,10 +470,10 @@ def team_details(team_id):
 @app.route('/student_profile/<int:student_id>')
 def student_profile(student_id):
     student = Students.query.get_or_404(student_id)
-    
+        
     # Fetch the sports and possible teams for the student
     student_sports_teams = db.session.query(
-        Sports.name, Teams.name
+        Sports.id, Sports.name, Teams.id, Teams.name
     ).join(
         StudentSport, Sports.id == StudentSport.sport_id
     ).outerjoin(
@@ -483,16 +486,17 @@ def student_profile(student_id):
 
     sports_teams = [
         {
-            "sport_name": sport_team[0],
-            "team_name": sport_team[1] or "NOT ASSIGNED"
+            "sport_id": sport_team[0],
+            "sport_name": sport_team[1],
+            "team_id": sport_team[2],
+            "team_name": sport_team[3] or "NOT ASSIGNED"
         }
         for sport_team in student_sports_teams
     ]
 
+
+
     return render_template('student_profile.html', student=student, sports_teams=sports_teams)
-
-
-
 
 
 @app.route('/student_list')
@@ -506,21 +510,6 @@ def people_list():
     all_people = People.query.all()  # Querying all rows from the People table
     return render_template('people_list.html', all_people=all_people)
 
-@app.route('/unassigned_students')
-def teams():
-    # Query for students not in any team
-    unassigned_students = db.session.query(Students).outerjoin(
-        StudentTeam, Students.id == StudentTeam.student_id
-    ).filter(StudentTeam.team_id.is_(None)).all()
-
-    # Fetch the sports for each unassigned student
-    for student in unassigned_students:
-        student.sports = db.session.query(Sports.name).join(
-            StudentSport, Sports.id == StudentSport.sport_id
-        ).filter(StudentSport.student_id == student.id).all()
-        student.sports = [sport[0] for sport in student.sports]
-
-    return render_template('unassigned_students.html', students=unassigned_students)
 
 @app.route('/sports_grid')
 def sports_grid():
@@ -543,9 +532,6 @@ def sports_grid():
         })
 
     return render_template('sports_grid.html', sports_data=sports_data)
-
-
-
 
 #*---------------------------------------------------------------
 #* These are the functional functions (User Actions)
