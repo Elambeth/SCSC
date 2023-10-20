@@ -5,18 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ team.name }} Details</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Add any other styles or meta tags you need -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        h1 {
+            color: #495057;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #6c757d;
+            font-size: 1.25em;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+        h2 {
+            color: #6c757d;
+            font-size: 1.75em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #e0e0e0;
+        }
+        /* Add styles for the hover effect */
+        tbody tr:hover {
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        .kebab-menu {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .kebab-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 180px;
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .kebab-dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .kebab-dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+        tbody tr a {
+            color: #6c757d;  /* Same color as table text */
+            text-decoration: none;
+        }
+        tbody tr a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>{{ team.name }} Details</h1>
         <p>Division: {{ team.division }}</p>
-        <!-- Add more details as needed -->
-        <!-- For example, if you fetch students of this team, you can display them in a list or table -->
+
+        <!-- Display students in the team -->
+        <h2>Students in {{ team.name }}</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><a href="{{ url_for('student_profile', student_id=student.id) }}">{{ student.person.first_name }} {{ student.person.last_name }}</a></td>
+                    <td>
+                        <div class="kebab-menu">
+                            <div class="kebab-icon" data-student-id="{{ student.id }}">
+                                &#x2026;
+                            </div>
+                            <div class="kebab-dropdown">
+                                <!-- Add any actions you want for each student here -->
+                                <a href="#">Action 1</a>
+                                <a href="#">Action 2</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <!-- Add any scripts you need -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+    $(document).ready(function(){
+        $(".kebab-icon").on("click", function(){
+            // Hide any other open kebab menus
+            $(".kebab-dropdown").hide();
+    
+            // Toggle the menu for the clicked kebab icon
+            $(this).next(".kebab-dropdown").toggle();
+        });
+    
+        // Hide the kebab menu when clicking outside
+        $(document).on("click", function(event){
+            if (!$(event.target).closest(".kebab-menu").length) {
+                $(".kebab-dropdown").hide();
+            }
+        });
+    });
+    </script>
 </body>
 </html>

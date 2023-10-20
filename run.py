@@ -410,6 +410,18 @@ def link_students_sports():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/student_list')
+def student_list():
+    students = Students.query.all()
+    return render_template('student_list.html', students=students)
+
+
+@app.route('/people_list')
+def people_list():
+    all_people = People.query.all()  # Querying all rows from the People table
+    return render_template('people_list.html', all_people=all_people)
+
+
 @app.route('/display_student_sports')
 def display_student_sports():
     # Fetching all entries from StudentSport and joining with Students and Sports to fetch related data
@@ -462,9 +474,14 @@ def sport_detail(sport_id):
 
 @app.route('/team/<int:team_id>')
 def team_details(team_id):
-    team = Teams.query.get_or_404(team_id)  # Get the team or return a 404 error if it's not found
-    # Fetch other related data if needed...
-    return render_template('team_detail.html', team=team)
+    team = Teams.query.get_or_404(team_id)
+    
+    # Fetch the students associated with this team
+    students_in_team = db.session.query(Students).join(
+        StudentTeam, Students.id == StudentTeam.student_id
+    ).filter(StudentTeam.team_id == team_id).all()
+
+    return render_template('team_detail.html', team=team, students=students_in_team)
 
 
 @app.route('/student_profile/<int:student_id>')
@@ -499,16 +516,6 @@ def student_profile(student_id):
     return render_template('student_profile.html', student=student, sports_teams=sports_teams)
 
 
-@app.route('/student_list')
-def student_list():
-    students = Students.query.all()
-    return render_template('student_list.html', students=students)
-
-
-@app.route('/people_list')
-def people_list():
-    all_people = People.query.all()  # Querying all rows from the People table
-    return render_template('people_list.html', all_people=all_people)
 
 
 @app.route('/sports_grid')
@@ -533,9 +540,31 @@ def sports_grid():
 
     return render_template('sports_grid.html', sports_data=sports_data)
 
+
 #*---------------------------------------------------------------
 #* These are the functional functions (User Actions)
 #*---------------------------------------------------------------
+
+
+@app.route('/create_team/<int:sport_id>', methods=['GET', 'POST'])
+def create_team(sport_id):
+    sport = Sports.query.get_or_404(sport_id)
+    
+    if request.method == 'POST':
+        team_name = request.form.get('team_name')
+        division = request.form.get('division')
+        # For now, we'll set a placeholder for staff_id and coach_id. You can later update this logic to select staff and coach from your database.
+        staff_id = 1
+        coach_id = 1
+        
+        new_team = Teams(name=team_name, division=division, sport_id=sport_id, staff_id=staff_id, coach_id=coach_id)
+        db.session.add(new_team)
+        db.session.commit()
+        
+        return redirect(url_for('sport_detail', sport_id=sport_id))
+    
+    return render_template('create_team.html', sport=sport)
+
 
 @app.route('/add_student_to_team/<int:student_id>', methods=['GET', 'POST'])
 def add_student_to_team(student_id):
@@ -565,25 +594,6 @@ def add_student_to_team(student_id):
     return render_template('add_student_to_team.html', student=student, teams=teams)
 
 
-
-@app.route('/create_team/<int:sport_id>', methods=['GET', 'POST'])
-def create_team(sport_id):
-    sport = Sports.query.get_or_404(sport_id)
-    
-    if request.method == 'POST':
-        team_name = request.form.get('team_name')
-        division = request.form.get('division')
-        # For now, we'll set a placeholder for staff_id and coach_id. You can later update this logic to select staff and coach from your database.
-        staff_id = 1
-        coach_id = 1
-        
-        new_team = Teams(name=team_name, division=division, sport_id=sport_id, staff_id=staff_id, coach_id=coach_id)
-        db.session.add(new_team)
-        db.session.commit()
-        
-        return redirect(url_for('sport_detail', sport_id=sport_id))
-    
-    return render_template('create_team.html', sport=sport)
 
 
 

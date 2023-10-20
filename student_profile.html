@@ -48,11 +48,10 @@
 </head>
 <body>
     <div class="container">
-        <h2>Student Profile</h2>
+        <h2>{{ student.person.first_name }} {{ student.person.last_name }}</h2>
         
         <!-- Student Details -->
         <div class="student-details">
-            <h3>{{ student.first_name }} {{ student.last_name }}</h3>
             <p><strong>Email:</strong> {{ student.email }}</p>
             <!-- ... Other details ... -->
         </div>
