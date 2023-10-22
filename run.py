@@ -1,5 +1,5 @@
 
-from flask import Flask,render_template, request, redirect, url_for
+from flask import Flask,render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import and_
 import csv
@@ -410,6 +410,40 @@ def link_students_sports():
     return redirect(url_for('dashboard'))
 
 
+
+@app.route('/lost_students', methods=['GET', 'POST'])
+def lost_students():
+    # If the form is submitted to update an email
+    if request.method == 'POST':
+        old_email = request.form.get('old_email')
+        new_email = request.form.get('new_email')
+        # Update the email in form.csv (you can add this logic)
+        # ...
+
+    # Extract emails from form.csv
+    field_size_limit(int(1e6))
+    with open("form.csv", 'r') as f:
+        reader = csv.reader(f)
+        csv_data = list(reader)
+        _, listy = cleaning(csv_data)
+        csv_emails = [row[2].replace(" ","").lower() for row in listy]
+        
+    # Get all emails from the Students table
+    student_emails = [person.email for person in db.session.query(People.email).join(Students, People.id == Students.people_id).all()]
+    
+    # Find emails that are in the CSV but not in the Students table
+    lost_emails = set(csv_emails) - set(student_emails)
+
+    lost_students = [{"first_name": row[3].split()[0], 
+                      "last_name": " ".join(row[3].split()[1:]), 
+                      "email": row[2].replace(" ", "").lower()} 
+                     for row in listy if row[2].replace(" ", "").lower() in lost_emails]
+
+    return render_template('lost_students.html', lost_students=lost_students)
+
+
+
+
 @app.route('/student_list')
 def student_list():
     students = Students.query.all()
@@ -541,6 +575,25 @@ def sports_grid():
     return render_template('sports_grid.html', sports_data=sports_data)
 
 
+@app.route('/all_students')
+def all_students():
+    people = People.query.all()  # Fetch all individuals from the People table
+    person_sport_map = {}
+    person_student_map = {}  # New dictionary to map person_id to student_id
+    
+    for person in people:
+        student = Students.query.filter_by(people_id=person.id).first()
+        if student:
+            student_sport = StudentSport.query.filter_by(student_id=student.id).first()
+            person_sport_map[person.id] = True if student_sport else False
+            person_student_map[person.id] = student.id  # Store the student_id
+        else:
+            person_sport_map[person.id] = False
+
+    return render_template('all_students.html', people=people, person_sport_map=person_sport_map, person_student_map=person_student_map)
+
+
+
 #*---------------------------------------------------------------
 #* These are the functional functions (User Actions)
 #*---------------------------------------------------------------
@@ -594,7 +647,24 @@ def add_student_to_team(student_id):
     return render_template('add_student_to_team.html', student=student, teams=teams)
 
 
+@app.route('/remove_student_from_team/<int:student_id>/<int:team_id>', methods=['POST'])
+def remove_student_from_team(student_id, team_id):
+    # Fetch the student-team association
+    association = StudentTeam.query.filter_by(student_id=student_id, team_id=team_id).first()
+    if association:
+        db.session.delete(association)
+        db.session.commit()
+    return redirect(url_for('team_details', team_id=team_id))
 
+@app.route('/assign_to_sport/<int:person_id>', methods=['GET', 'POST'])
+def assign_to_sport(person_id):
+    person = People.query.get_or_404(person_id)
+    if request.method == 'POST':
+        # Handle the logic of assigning the student to a sport
+        # This might involve creating a new entry in the Students table and/or the StudentSport table
+        # Redirect to the all_students page after assigning
+        return redirect(url_for('all_students'))
+    return render_template('assign_to_sport.html', person=person)
 
 
 if __name__ == "__main__":
